@@ -95,20 +95,13 @@ const Navbar = () => {
     const storeToken = async () => {
       if (!authLoaded || !userLoaded) return;
 
-      if (!isSignedIn) {
+      if (!isSignedIn || !isAdmin) {
         try {
           localStorage.removeItem("clerk_token");
         } catch (error) { }
 
+        navigate("/add");
         return;
-      }
-
-      if (!isAdmin) {
-        return (
-          <div className="flex items-center justify-center h-screen text-3xl font-bold text-red-500">
-            Access Denied
-          </div>
-        );
       }
       try {
         if (getToken) {
