@@ -100,7 +100,8 @@ const Navbar = () => {
           localStorage.removeItem("clerk_token");
         } catch (error) { }
 
-        navigate("/add");
+        navigate("/");
+        alert("Access denied. Admins only.");
         return;
       }
       try {
