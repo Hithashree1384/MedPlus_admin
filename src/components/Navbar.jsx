@@ -1,25 +1,29 @@
 import React from 'react'
-import { useState,useRef,useEffect,useCallback ,useLayoutEffect} from 'react';
-import {navbarStyles as ns} from '../assets/dummyStyles';
+import { useState, useRef, useEffect, useCallback, useLayoutEffect } from 'react';
+import { navbarStyles as ns } from '../assets/dummyStyles';
 import logo from "../assets/logo.jpeg"
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { NavLink } from "react-router-dom";
-import  { Calendar, Grid, Home, HomeIcon, List, Menu, PlusSquare, UserPlus, Users, X } from 'lucide-react'
-import {useClerk,Show, SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/react'
+import { Calendar, Grid, Home, HomeIcon, List, Menu, PlusSquare, UserPlus, Users, X } from 'lucide-react'
+import { useClerk, Show, SignInButton, SignUpButton, UserButton, useAuth, useUser } from '@clerk/react'
 
 const Navbar = () => {
-    const [open,setOpen]=useState(false)
-    const navInnerRef=useRef(null)
-    const indicatorRef=useRef(null)
-    const location=useLocation();
-    const navigate=useNavigate();
+  const [open, setOpen] = useState(false)
+  const navInnerRef = useRef(null)
+  const indicatorRef = useRef(null)
+  const location = useLocation();
+  const navigate = useNavigate();
 
-    const clerk=useClerk?.();
-    const {getToken,isLoaded:authLoaded}=useAuth();
-    const {isSignedIn,user,isLoaded:userLoaded}=useUser();
+  const clerk = useClerk?.();
+  const { getToken, isLoaded: authLoaded } = useAuth();
+  const { isSignedIn, user, isLoaded: userLoaded } = useUser();
+  const adminEmail = "hithashree1384@gmail.com";
 
-    //sliding 
-      const moveIndicator = useCallback(() => {
+  const isAdmin =
+    user?.primaryEmailAddress?.emailAddress === adminEmail;
+
+  //sliding 
+  const moveIndicator = useCallback(() => {
     const container = navInnerRef.current;
     const ind = indicatorRef.current;
     if (!container || !ind) return;
@@ -86,93 +90,93 @@ const Navbar = () => {
 
   //sigin fetch
 
-  useEffect(()=>{
-    let mounted=true;
-    const storeToken=async ()=>{
-        if(!authLoaded || !userLoaded) return;
-        if(!isSignedIn){
-            try{
-                localStorage.removeItem("clerk_token")
-            }
-            catch(error){
+  useEffect(() => {
+    let mounted = true;
+    const storeToken = async () => {
+      if (!authLoaded || !userLoaded) return;
+
+      if (!isSignedIn || !isAdmin) {
+        try {
+          localStorage.removeItem("clerk_token");
+        } catch (error) { }
+
+        navigate("/");
+        return;
+      }
+      try {
+        if (getToken) {
+          const token = await getToken();
+          if (!mounted) return;
+          if (token) {
+            try {
+              localStorage.setItem("clerk_token", token)
 
             }
-            return;
-        }
-        try{
-            if(getToken){
-                const token =await getToken();
-                if(!mounted) return;
-                if(token){
-                    try{
-                        localStorage.setItem("clerk_token",token)
-
-                    }
-                    catch(error){
-                        console.warn("Failed to write clerk token to local storage",error);
-                    }
-
-                }
+            catch (error) {
+              console.warn("Failed to write clerk token to local storage", error);
             }
+
+          }
         }
-        catch(error){
-            console.warn("Could not retrieve clerk token",error);
-        }
+      }
+      catch (error) {
+        console.warn("Could not retrieve clerk token", error);
+      }
     }
     storeToken();
-    return()=>{
-        mounted=false
+    return () => {
+      mounted = false
     };
-  }, [isSignedIn, authLoaded, userLoaded, getToken])
+  }, [isSignedIn, isAdmin, authLoaded, userLoaded, getToken, navigate])
 
-  const handleOpenSignIn=()=>{
-    if(!clerk || !clerk.openSignIn){
-        console.warn("Clerk is not available");
-        return;
+  const handleOpenSignIn = () => {
+    if (!clerk || !clerk.openSignIn) {
+      console.warn("Clerk is not available");
+      return;
     }
     clerk.openSignIn();
     navigate("/h")
   }
 
-  const handleSignOut=async()=>{
-        if(!clerk || !clerk.signOut){
-        console.warn("Clerk is not available");
-        return;
+  const handleSignOut = async () => {
+    if (!clerk || !clerk.signOut) {
+      console.warn("Clerk is not available");
+      return;
     }
-    try{
-        await clerk.signOut();
-    }catch(error){
-        console.error("Sign out failed",error);
-    }finally{
-        try{
+    try {
+      await clerk.signOut();
+    } catch (error) {
+      console.error("Sign out failed", error);
+    } finally {
+      try {
         localStorage.removeItem("clerk_token")
-        }catch(error){
+      } catch (error) {
 
-        }
-        navigate("/")
+      }
+      navigate("/")
     }
   }
   return (
     <header className={ns.header}>
-        <nav className={ns.navContainer}>
-            <div className={ns.flexContainer}>
-                <div className={ns.logoContainer}>
-                    <img src={logo} alt="logo" className={ns.logoImage}/>
-                    <Link to='/'>
-                    <div className={ns.logoLink}>MedPlus</div>
-                    <div className={ns.logoSubtext}>Healthcare Solutions</div>
-                    </Link>
-                </div>
+      <nav className={ns.navContainer}>
+        <div className={ns.flexContainer}>
+          <div className={ns.logoContainer}>
+            <img src={logo} alt="logo" className={ns.logoImage} />
+            <Link to='/'>
+              <div className={ns.logoLink}>MedPlus</div>
+              <div className={ns.logoSubtext}>Healthcare Solutions</div>
+            </Link>
+          </div>
 
-                <div className={ns.centerNavContainer}>
-                    <div className={ns.glowEffect}>
-                        <div className={ns.centerNavInner}>
-                            <div ref={navInnerRef} tabIndex={0} className={ns.centerNavContainer}
-                            style={{
-                                WebkitOverflowScrolling:"touch"
-                            }}>
+          <div className={ns.centerNavContainer}>
+            <div className={ns.glowEffect}>
+              <div className={ns.centerNavInner}>
+                <div ref={navInnerRef} tabIndex={0} className={ns.centerNavContainer}
+                  style={{
+                    WebkitOverflowScrolling: "touch"
+                  }}>
 
-                                 <CenterNavItem
+                  <CenterNavItem
                     to="/h"
                     label="Dashboard"
                     icon={<Home size={16} />}
@@ -213,38 +217,38 @@ const Navbar = () => {
                     icon={<Calendar size={16} />}
                   />
 
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-               {/* right side */}
-               <div className={ns.rightContainer}>
-                {isSignedIn?(
-                    <button onClick={handleSignOut} className={ns.signOutButton + " "+ ns.cursorPointer}>
-                        Sign out
-
-                    </button>
-
-                ):(
-                    <div className="hidden lg:flex items-center gap-2">
-                        <button onClick={handleOpenSignIn} className={ns.loginButton + " " + ns.cursorPointer}>Login</button>
-                        </div>
-                )}
-                <button onClick={()=>setOpen((v)=>!v)} className={ns.mobileMenuButton}>
-                    {open ? <X size={18}/> :<Menu size={18}/>}
-                </button>
-               </div>
+              </div>
             </div>
-            {open &&(
-                <div className={ns.mobileOverlay} onClick={()=>setOpen(false)}/>
-            )}
-            {open && (
-                <div className={ns.mobileAuthContainer} id='mobile-menu'>
-                    <div className={ns.mobileMenuInner}>
+          </div>
 
-            
-                        <MobileItem
+          {/* right side */}
+          <div className={ns.rightContainer}>
+            {isSignedIn ? (
+              <button onClick={handleSignOut} className={ns.signOutButton + " " + ns.cursorPointer}>
+                Sign out
+
+              </button>
+
+            ) : (
+              <div className="hidden lg:flex items-center gap-2">
+                <button onClick={handleOpenSignIn} className={ns.loginButton + " " + ns.cursorPointer}>Login</button>
+              </div>
+            )}
+            <button onClick={() => setOpen((v) => !v)} className={ns.mobileMenuButton}>
+              {open ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+        </div>
+        {open && (
+          <div className={ns.mobileOverlay} onClick={() => setOpen(false)} />
+        )}
+        {open && (
+          <div className={ns.mobileAuthContainer} id='mobile-menu'>
+            <div className={ns.mobileMenuInner}>
+
+
+              <MobileItem
                 to="/h"
                 label="Dashboard"
                 icon={<Home size={16} />}
@@ -297,24 +301,24 @@ const Navbar = () => {
 
               <div className={ns.mobileAuthContainer}>
                 {isSignedIn ? (
-                    <button onClick={()=>{
-                        handleSignOut();
-                        setOpen(false);
-                    }} className={ns.mobileSignOutButton}>Sign Out</button>
-                ):(<div className="space-y-2">
-                    <button onClick={()=>{
-                        handleOpenSignIn();
-                        setOpen(false);
-                    }} className={ns.mobileLoginButton + " " + ns.cursorPointer}>Login</button>
-                    </div>
-                    )}
-              </div>
-                    </div>
+                  <button onClick={() => {
+                    handleSignOut();
+                    setOpen(false);
+                  }} className={ns.mobileSignOutButton}>Sign Out</button>
+                ) : (<div className="space-y-2">
+                  <button onClick={() => {
+                    handleOpenSignIn();
+                    setOpen(false);
+                  }} className={ns.mobileLoginButton + " " + ns.cursorPointer}>Login</button>
                 </div>
-            )}
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
 
-        </nav>
+      </nav>
     </header>
   )
 }
@@ -327,8 +331,7 @@ function CenterNavItem({ to, icon, label }) {
       to={to}
       end
       className={({ isActive }) =>
-        `nav-item ${isActive ? "active" : ""} ${ns.centerNavItemBase} ${
-          isActive ? ns.centerNavItemActive : ns.centerNavItemInactive
+        `nav-item ${isActive ? "active" : ""} ${ns.centerNavItemBase} ${isActive ? ns.centerNavItemActive : ns.centerNavItemInactive
         }`
       }
     >
@@ -344,8 +347,7 @@ function MobileItem({ to, icon, label, onClick }) {
       to={to}
       onClick={onClick}
       className={({ isActive }) =>
-        `${ns.mobileItemBase} ${
-          isActive ? ns.mobileItemActive : ns.mobileItemInactive
+        `${ns.mobileItemBase} ${isActive ? ns.mobileItemActive : ns.mobileItemInactive
         }`
       }
     >
